@@ -1,0 +1,13 @@
+Lorem ipsum dolor sit amet consectetur adipiscing elit praesent lobortis, bibendum tempus aliquam nec placerat magnis at lacus senectus, parturient accumsan orci cubilia viverra porta non luctus. Conubia euismod donec ullamcorper condimentum curae in platea risus pharetra, magnis mi commodo orci etiam lacinia molestie habitasse proin, cursus fusce quis imperdiet parturient facilisi class integer. Velit ultrices sollicitudin sapien urna tellus feugiat non fames, ante mollis risus montes mus habitant vel, ut turpis cum nullam dignissim ultricies et.
+
+cliente.c
+
+hostname direccion ip
+server port 8080
+
+server.c
+
+serverport 8080
+
+
+filepath : a su gusto
