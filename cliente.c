@@ -1,48 +1,112 @@
-// Client side C/C++ program to demonstrate Socket
-// programming
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#define PORT 8080
+/*
+Send a file over a socket.
 
-int main(int argc, char const* argv[])
-{
-	int sock = 0, valread, client_fd;
-	struct sockaddr_in serv_addr;
-	char* hello = "Hello from client";
-	char buffer[1024] = { 0 };
-	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		printf("\n Socket creation error \n");
-		return -1;
-	}
+Interface:
 
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_port = htons(PORT);
+    ./executable [ [ []]]
 
-	// Convert IPv4 and IPv6 addresses from text to binary
-	// form
-	if (inet_pton(AF_INET, "44.208.198.188", &serv_addr.sin_addr)
-		<= 0) {
-		printf(
-			"\nInvalid address/ Address not supported \n");
-		return -1;
-	}
+Defaults:
 
-	if ((client_fd
-		= connect(sock, (struct sockaddr*)&serv_addr,
-				sizeof(serv_addr)))
-		< 0) {
-		printf("\nConnection Failed \n");
-		return -1;
-	}
-	send(sock, hello, strlen(hello), 0);
-	printf("Hello message sent\n");
-	valread = read(sock, buffer, 1024);
-	printf("%s\n", buffer);
+- input_path: input.tmp
+- server_hostname: 127.0.0.1
+- port: 12345
+*/
 
-	// closing the connected socket
-	close(client_fd);
-	return 0;
-}
+#define _XOPEN_SOURCE 700
+
+#include 
+#include 
+
+#include 
+#include 
+#include  /* getprotobyname */
+#include 
+#include 
+#include 
+#include 
+
+int main(int argc, char **argv) 
+    char protoname[] = "tcp"; //nombre del protocolo 
+    struct protoent *protoent;
+    char *file_path = "input.tmp"; //nombre del archivo 
+    char *server_hostname = "127.0.0.1"; //ip del servidor
+    char *server_reply = NULL;
+    char *user_input = NULL;
+    char buffer[BUFSIZ];
+    in_addr_t in_addr;
+    in_addr_t server_addr;
+    int filefd;
+    int sockfd;
+    ssize_t i;
+    ssize_t read_return;
+    struct hostent *hostent;
+    struct sockaddr_in sockaddr_in;
+    unsigned short server_port = 12345; //puerto servidor
+
+    //argumentos
+    
+    if (argc > 1) 
+        file_path = argv[1];
+        if (argc > 2) 
+            server_hostname = argv[2];
+            if (argc > 3) 
+                server_port = strtol(argv[3], NULL, 10);
+            
+        
+    
+
+    filefd = open(file_path, O_RDONLY);
+    if (filefd == -1) 
+        perror("open");
+        exit(EXIT_FAILURE);
+    
+
+    /* Get socket. */
+    protoent = getprotobyname(protoname);
+    if (protoent == NULL) 
+        perror("getprotobyname");
+        exit(EXIT_FAILURE);
+    
+    sockfd = socket(AF_INET, SOCK_STREAM, protoent->p_proto);
+    if (sockfd == -1) 
+        perror("socket");
+        exit(EXIT_FAILURE);
+    
+    /* Prepare sockaddr_in. */
+    hostent = gethostbyname(server_hostname);
+    if (hostent == NULL) 
+        fprintf(stderr, "error: gethostbyname("%s")n", server_hostname);
+        exit(EXIT_FAILURE);
+    
+    in_addr = inet_addr(inet_ntoa(*(struct in_addr*)*(hostent->h_addr_list)));
+    if (in_addr == (in_addr_t)-1) 
+        fprintf(stderr, "error: inet_addr("%s")n", *(hostent->h_addr_list));
+        exit(EXIT_FAILURE);
+    
+    sockaddr_in.sin_addr.s_addr = in_addr;
+    sockaddr_in.sin_family = AF_INET;
+    sockaddr_in.sin_port = htons(server_port);
+    /* Do the actual connection. */
+    if (connect(sockfd, (struct sockaddr*)&sockaddr_in, sizeof(sockaddr_in)) == -1) 
+        perror("connect");
+        return EXIT_FAILURE;
+    
+
+    while (1) 
+        read_return = read(filefd, buffer, BUFSIZ);
+        if (read_return == 0)
+            break;
+        if (read_return == -1) 
+            perror("read");
+            exit(EXIT_FAILURE);
+        
+        /* TODO use write loop: https://stackoverflow.com/questions/24259640/writing-a-full-buffer-using-write-system-call */
+        if (write(sockfd, buffer, read_return) == -1) 
+            perror("write");
+            exit(EXIT_FAILURE);
+        
+    
+    free(user_input);
+    free(server_reply);
+    close(filefd);
+    exit(EXIT_SUCCESS);
